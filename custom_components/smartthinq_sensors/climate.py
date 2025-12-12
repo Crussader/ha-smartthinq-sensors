@@ -303,6 +303,10 @@ class LGEACClimate(LGEClimate):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.OFF:
+            # Default to None (which should not happen since typehinting suggests this exists)
+            self._store.async_save(
+                {"target_temp": getattr(self._device.status, "current_temp", None)}
+            )
             await self._device.power(False)
             self._api.async_set_updated()
             return
@@ -313,7 +317,9 @@ class LGEACClimate(LGEClimate):
             raise ValueError(f"Invalid hvac_mode [{hvac_mode}]")
 
         if not self._api.state.is_on:
-            await self._device.power(True)
+            data = await self._store.async_load()
+            await self._device.power(True, data.get("target_temp"))
+
         if operation_mode != HVAC_MODE_NONE:
             await self._device.set_op_mode(operation_mode)
         self._api.async_set_updated()
@@ -341,7 +347,8 @@ class LGEACClimate(LGEClimate):
             raise ValueError(f"Invalid preset_mode [{preset_mode}]")
 
         if not self._api.state.is_on:
-            await self._device.power(True)
+            data = await self._store.async_load()
+            await self._device.power(True, data.get("target_temp"))
         await self._device.set_op_mode(operation_mode)
         self._api.async_set_updated()
 
