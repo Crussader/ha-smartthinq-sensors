@@ -672,12 +672,15 @@ class AirConditionerDevice(Device):
             return None
         return self.conv_temp_unit(temp_range[1])
 
-    async def power(self, turn_on):
+    async def power(self, turn_on, temp: int = None):
         """Turn on or off the device (according to a boolean)."""
         operation = self._supported_on_operation if turn_on else ACOp.OFF
         keys = self._get_cmd_keys(CMD_STATE_OPERATION)
         op_value = self.model_info.enum_value(keys[2], operation.value)
         await self.set(keys[0], keys[1], key=keys[2], value=op_value)
+
+        if turn_on and temp is not None:
+            await self.set_target_temp(temp)
 
     async def set_op_mode(self, mode):
         """Set the device's operating mode to an `OpMode` value."""

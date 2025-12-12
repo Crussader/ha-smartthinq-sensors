@@ -29,6 +29,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback, current_platform
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.storage import Store
 
 from . import LGEDevice
 from .const import DOMAIN, LGE_DEVICES, LGE_DISCOVERY_NEW
@@ -221,6 +222,9 @@ class LGEACClimate(LGEClimate):
 
         self._hvac_mode_lookup: dict[str, HVACMode] | None = None
         self._preset_mode_lookup: dict[str, str] | None = None
+        self._store = Store[dict[str, Any]](
+            api.coordinator.hass, 1, api.device_id, atomic_writes=True
+        )
 
     def _available_hvac_modes(self) -> dict[str, HVACMode]:
         """Return available hvac modes from lookup dict."""
@@ -425,11 +429,17 @@ class LGEACClimate(LGEClimate):
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
-        await self._device.power(True)
+        data = await self._store.async_load()
+        await self._device.power(True, data.get("target_temp"))
+
         self._api.async_set_updated()
 
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
+        # Default to None (which should not happen since typehinting suggests this exists)
+        self._store.async_save(
+            {"target_temp": getattr(self._device.status, "current_temp", None)}
+        )
         await self._device.power(False)
         self._api.async_set_updated()
 
