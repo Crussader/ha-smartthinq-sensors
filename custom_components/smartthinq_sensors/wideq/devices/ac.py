@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from enum import Enum
 import logging
 
@@ -680,6 +681,7 @@ class AirConditionerDevice(Device):
         await self.set(keys[0], keys[1], key=keys[2], value=op_value)
 
         if turn_on and temp is not None:
+            await asyncio.sleep(2)
             await self.set_target_temp(temp)
 
     async def set_op_mode(self, mode):
