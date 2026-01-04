@@ -304,7 +304,7 @@ class LGEACClimate(LGEClimate):
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.OFF:
             # Default to None (which should not happen since typehinting suggests this exists)
-            data = {"target_temp": getattr(self._device.status, "current_temp", None)}
+            data = {"target_temp": getattr(self._device.status, "target_temp", None)}
             await self._store.async_save(data)
             _LOGGER.info(
                 f"Storing temperature data for device {self._api.device_id}: {data}"
@@ -455,7 +455,7 @@ class LGEACClimate(LGEClimate):
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
         # Default to None (which should not happen since typehinting suggests this exists)
-        data = {"target_temp": getattr(self._device.status, "current_temp", None)}
+        data = {"target_temp": getattr(self._device.status, "target_temp", None)}
         await self._store.async_save(data)
         _LOGGER.info(
             f"Storing temperature data for device {self._api.device_id}: {data}"
