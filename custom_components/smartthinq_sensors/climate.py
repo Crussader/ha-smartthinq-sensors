@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 import logging
 from typing import Any, Awaitable, Callable
@@ -323,7 +324,11 @@ class LGEACClimate(LGEClimate):
             _LOGGER.info(
                 f"Loading temperature data for device {self._api.device_id}: {data}"
             )
-            await self._device.power(True, data.get("target_temp"))
+            await self._device.power(True)
+            self._api.async_set_updated()
+
+            if data.get("target_temp") is not None:
+                await self._device.set_target_temp(data.get("target_temp"))
 
         if operation_mode != HVAC_MODE_NONE:
             await self._device.set_op_mode(operation_mode)
@@ -356,7 +361,12 @@ class LGEACClimate(LGEClimate):
             _LOGGER.info(
                 f"Loading temperature data for device {self._api.device_id}: {data}"
             )
-            await self._device.power(True, data.get("target_temp"))
+            await self._device.power(True)
+            self._api.async_set_updated()
+
+            if data.get("target_temp") is not None:
+                await self._device.set_target_temp(data.get("target_temp"))
+
         await self._device.set_op_mode(operation_mode)
         self._api.async_set_updated()
 
@@ -448,7 +458,11 @@ class LGEACClimate(LGEClimate):
         _LOGGER.info(
             f"Loading temperature data for device {self._api.device_id}: {data}"
         )
-        await self._device.power(True, data.get("target_temp"))
+        await self._device.power(True)
+        self._api.async_set_updated()
+
+        if data.get("target_temp") is not None:
+            await self._device.set_target_temp(data.get("target_temp"))
 
         self._api.async_set_updated()
 
