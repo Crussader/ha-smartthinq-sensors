@@ -304,8 +304,10 @@ class LGEACClimate(LGEClimate):
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.OFF:
             # Default to None (which should not happen since typehinting suggests this exists)
-            self._store.async_save(
-                {"target_temp": getattr(self._device.status, "current_temp", None)}
+            data = {"target_temp": getattr(self._device.status, "current_temp", None)}
+            await self._store.async_save(data)
+            _LOGGER.info(
+                f"Storing temperature data for device {self._api.device_id}: {data}"
             )
             await self._device.power(False)
             self._api.async_set_updated()
@@ -317,7 +319,10 @@ class LGEACClimate(LGEClimate):
             raise ValueError(f"Invalid hvac_mode [{hvac_mode}]")
 
         if not self._api.state.is_on:
-            data = await self._store.async_load()
+            data = await self._store.async_load() or {}
+            _LOGGER.info(
+                f"Loading temperature data for device {self._api.device_id}: {data}"
+            )
             await self._device.power(True, data.get("target_temp"))
 
         if operation_mode != HVAC_MODE_NONE:
@@ -347,7 +352,10 @@ class LGEACClimate(LGEClimate):
             raise ValueError(f"Invalid preset_mode [{preset_mode}]")
 
         if not self._api.state.is_on:
-            data = await self._store.async_load()
+            data = await self._store.async_load() or {}
+            _LOGGER.info(
+                f"Loading temperature data for device {self._api.device_id}: {data}"
+            )
             await self._device.power(True, data.get("target_temp"))
         await self._device.set_op_mode(operation_mode)
         self._api.async_set_updated()
@@ -436,7 +444,10 @@ class LGEACClimate(LGEClimate):
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
-        data = await self._store.async_load()
+        data = await self._store.async_load() or {}
+        _LOGGER.info(
+            f"Loading temperature data for device {self._api.device_id}: {data}"
+        )
         await self._device.power(True, data.get("target_temp"))
 
         self._api.async_set_updated()
@@ -444,8 +455,10 @@ class LGEACClimate(LGEClimate):
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
         # Default to None (which should not happen since typehinting suggests this exists)
-        self._store.async_save(
-            {"target_temp": getattr(self._device.status, "current_temp", None)}
+        data = {"target_temp": getattr(self._device.status, "current_temp", None)}
+        await self._store.async_save(data)
+        _LOGGER.info(
+            f"Storing temperature data for device {self._api.device_id}: {data}"
         )
         await self._device.power(False)
         self._api.async_set_updated()
